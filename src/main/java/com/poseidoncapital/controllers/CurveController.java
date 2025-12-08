@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import jakarta.validation.Valid;
 
-import java.util.List;
-
 @RequiredArgsConstructor
 @Controller
 public class CurveController {
