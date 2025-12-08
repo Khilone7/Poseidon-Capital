@@ -18,7 +18,6 @@ import jakarta.validation.Valid;
 @Controller
 public class CurveController {
 
-
     private final CurveService curveService;
 
     @RequestMapping("/curvePoint/list")
