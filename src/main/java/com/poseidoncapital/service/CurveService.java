@@ -18,10 +18,10 @@ public class CurveService {
     public void addCurvePoint(Integer curveId, Double term, Double value) {
         CurvePoint curvePoint = new CurvePoint();
         Timestamp now = new Timestamp(System.currentTimeMillis());
-        Timestamp asOfDate = Timestamp.valueOf(LocalDate.now().atStartOfDay());
+        Timestamp asOfDate = Timestamp.valueOf(LocalDate.now().atTime(8, 0));
 
         curvePoint.setCurveId(curveId);
-        curvePoint.setAsOfDate(now);
+        curvePoint.setAsOfDate(asOfDate);
         curvePoint.setTerm(term);
         curvePoint.setValue(value);
         curvePoint.setCreationDate(now);

@@ -26,7 +26,6 @@ public class CurveController {
     @RequestMapping("/curvePoint/list")
     public String home(Model model, Authentication auth) {
         //  find all Curve Point, add to model
-
         List<CurvePoint> curvePoints = curveService.getAllCurvePoints();
         model.addAttribute("curvePoints", curvePoints);
         return "curvePoint/list";
@@ -40,16 +39,13 @@ public class CurveController {
     @PostMapping("/curvePoint/validate")
     public String validate(@Valid CurvePoint curvePoint, BindingResult result, Model model) {
         //  check data valid and save to db, after saving return Curve list
-
         if (result.hasErrors()) return "curvePoint/add";
-
         try {
             curveService.addCurvePoint(curvePoint.getCurveId(), curvePoint.getTerm(), curvePoint.getValue());
         } catch (Exception e) {
             result.rejectValue("curveId", "error.curvePoint", "Erreur lors de l'ajout du Curve Point");
             return "curvePoint/add";
         }
-
         return "redirect:/curvePoint/list";
     }
 
@@ -65,11 +61,9 @@ public class CurveController {
     public String updateBid(@PathVariable("id") Integer id, @Valid CurvePoint curvePoint,
                             BindingResult result, Model model) {
         //  check required fields, if valid call service to update Curve and return Curve list
-
         if (result.hasErrors()) {
             return "curvePoint/update";
         }
-
         try {
             curveService.updateCurvePoint(id, curvePoint.getCurveId(), curvePoint.getTerm(), curvePoint.getValue());
         } catch (IllegalArgumentException e) {
@@ -82,7 +76,6 @@ public class CurveController {
     @GetMapping("/curvePoint/delete/{id}")
     public String deleteBid(@PathVariable("id") Integer id, Model model) {
         // Find Curve by Id and delete the Curve, return to Curve list
-
         curveService.deleteCurvePoint(id);
         return "redirect:/curvePoint/list";
     }
