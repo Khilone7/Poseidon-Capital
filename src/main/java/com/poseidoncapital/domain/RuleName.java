@@ -5,13 +5,13 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "Rulename")
+@Table(name = "rule_name")
 public class RuleName {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id")
-    private Byte id;
+    @Column(name = "id")
+    private Integer id;
 
     @Column(name = "name", length = 125)
     private String name;
@@ -25,9 +25,9 @@ public class RuleName {
     @Column(name = "template", length = 512)
     private String template;
 
-    @Column(name = "sqlStr", length = 125)
+    @Column(name = "sql_str", length = 125)
     private String sqlStr;
 
-    @Column(name = "sqlPart", length = 125)
+    @Column(name = "sql_part", length = 125)
     private String sqlPart;
 }

@@ -1,6 +1,9 @@
 package com.poseidoncapital.controllers;
 
 import com.poseidoncapital.domain.RuleName;
+import com.poseidoncapital.service.BidListService;
+import com.poseidoncapital.service.RuleNameService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -13,7 +16,9 @@ import jakarta.validation.Valid;
 
 @Controller
 public class RuleNameController {
-    // TODO: Inject RuleName service
+
+    @Autowired
+    private RuleNameService ruleNameService;
 
     @RequestMapping("/ruleName/list")
     public String home(Model model)

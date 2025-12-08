@@ -1,24 +1,26 @@
 package com.poseidoncapital.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
 import lombok.Data;
 
 import java.sql.Timestamp;
 
 @Data
 @Entity
-@Table(name = "Curvepoint")
+@Table(name = "curve_point")
 public class CurvePoint {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id")
-    private Byte id;
+    @Column(name = "id")
+    private Integer id;
 
-    @Column(name = "CurveId")
-    private Byte curveId;
+    @Max(value = 127, message = "CurveId ne peut pas dépasser 127")
+    @Column(name = "curve_id")
+    private Integer curveId;
 
-    @Column(name = "asOfDate")
+    @Column(name = "as_of_date")
     private Timestamp asOfDate;
 
     @Column(name = "term")
@@ -27,6 +29,6 @@ public class CurvePoint {
     @Column(name = "value")
     private Double value;
 
-    @Column(name = "creationDate")
+    @Column(name = "creation_date")
     private Timestamp creationDate;
 }

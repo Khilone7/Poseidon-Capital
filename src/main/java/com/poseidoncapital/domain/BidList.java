@@ -7,13 +7,13 @@ import java.sql.Timestamp;
 
 @Data
 @Entity
-@Table(name = "BidList")
+@Table(name = "Bid_list")
 public class BidList {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "BidListId")
-    private Byte bidListId;
+    @Column(name = "bid_list_id")
+    private Integer bidListId;
 
     @Column(name = "account", nullable = false, length = 30)
     private String account;
@@ -21,10 +21,10 @@ public class BidList {
     @Column(name = "type", nullable = false, length = 30)
     private String type;
 
-    @Column(name = "bidQuantity")
+    @Column(name = "bid_quantity")
     private Double bidQuantity;
 
-    @Column(name = "askQuantity")
+    @Column(name = "ask_quantity")
     private Double askQuantity;
 
     @Column(name = "bid")
@@ -36,7 +36,7 @@ public class BidList {
     @Column(name = "benchmark", length = 125)
     private String benchmark;
 
-    @Column(name = "bidListDate")
+    @Column(name = "bid_list_date")
     private Timestamp bidListDate;
 
     @Column(name = "commentary", length = 125)
@@ -54,25 +54,25 @@ public class BidList {
     @Column(name = "book", length = 125)
     private String book;
 
-    @Column(name = "creationName", length = 125)
+    @Column(name = "creation_name", length = 125)
     private String creationName;
 
-    @Column(name = "creationDate")
+    @Column(name = "creation_date")
     private Timestamp creationDate;
 
-    @Column(name = "revisionName", length = 125)
+    @Column(name = "revision_name", length = 125)
     private String revisionName;
 
-    @Column(name = "revisionDate")
+    @Column(name = "revision_date")
     private Timestamp revisionDate;
 
-    @Column(name = "dealName", length = 125)
+    @Column(name = "deal_name", length = 125)
     private String dealName;
 
-    @Column(name = "dealType", length = 125)
+    @Column(name = "deal_type", length = 125)
     private String dealType;
 
-    @Column(name = "sourceListId", length = 125)
+    @Column(name = "source_list_id", length = 125)
     private String sourceListId;
 
     @Column(name = "side", length = 125)

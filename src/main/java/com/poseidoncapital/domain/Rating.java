@@ -5,23 +5,23 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name = "Rating")
+@Table(name = "rating")
 public class Rating {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "Id")
-    private Byte id;
+    @Column(name = "id")
+    private Integer id;
 
-    @Column(name = "moodysRating", length = 125)
+    @Column(name = "moodys_rating", length = 125)
     private String moodysRating;
 
-    @Column(name = "sandPRating", length = 125)
+    @Column(name = "sandp_rating", length = 125)
     private String sandPRating;
 
-    @Column(name = "fitchRating", length = 125)
+    @Column(name = "fitch_rating", length = 125)
     private String fitchRating;
 
-    @Column(name = "orderNumber")
-    private Byte orderNumber;
+    @Column(name = "order_number")
+    private Integer orderNumber;
 }

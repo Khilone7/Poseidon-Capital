@@ -7,13 +7,13 @@ import java.sql.Timestamp;
 
 @Data
 @Entity
-@Table(name = "Trade")
+@Table(name = "trade")
 public class Trade {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "TradeId")
-    private Byte tradeId;
+    @Column(name = "trade_id")
+    private Integer tradeId;
 
     @Column(name = "account", nullable = false, length = 30)
     private String account;
@@ -21,19 +21,19 @@ public class Trade {
     @Column(name = "type", nullable = false, length = 30)
     private String type;
 
-    @Column(name = "buyQuantity")
+    @Column(name = "buy_quantity")
     private Double buyQuantity;
 
-    @Column(name = "sellQuantity")
+    @Column(name = "sell_quantity")
     private Double sellQuantity;
 
-    @Column(name = "buyPrice")
+    @Column(name = "buy_price")
     private Double buyPrice;
 
-    @Column(name = "sellPrice")
+    @Column(name = "sell_price")
     private Double sellPrice;
 
-    @Column(name = "tradeDate")
+    @Column(name = "trade_date")
     private Timestamp tradeDate;
 
     @Column(name = "security", length = 125)
@@ -51,25 +51,25 @@ public class Trade {
     @Column(name = "book", length = 125)
     private String book;
 
-    @Column(name = "creationName", length = 125)
+    @Column(name = "creation_name", length = 125)
     private String creationName;
 
-    @Column(name = "creationDate")
+    @Column(name = "creation_date")
     private Timestamp creationDate;
 
-    @Column(name = "revisionName", length = 125)
+    @Column(name = "revision_name", length = 125)
     private String revisionName;
 
-    @Column(name = "revisionDate")
+    @Column(name = "revision_date")
     private Timestamp revisionDate;
 
-    @Column(name = "dealName", length = 125)
+    @Column(name = "deal_name", length = 125)
     private String dealName;
 
-    @Column(name = "dealType", length = 125)
+    @Column(name = "deal_type", length = 125)
     private String dealType;
 
-    @Column(name = "sourceListId", length = 125)
+    @Column(name = "source_list_id", length = 125)
     private String sourceListId;
 
     @Column(name = "side", length = 125)

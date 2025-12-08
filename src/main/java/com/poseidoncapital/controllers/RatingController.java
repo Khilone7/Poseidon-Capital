@@ -1,6 +1,9 @@
 package com.poseidoncapital.controllers;
 
 import com.poseidoncapital.domain.Rating;
+import com.poseidoncapital.service.BidListService;
+import com.poseidoncapital.service.RatingService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -13,7 +16,9 @@ import jakarta.validation.Valid;
 
 @Controller
 public class RatingController {
-    // TODO: Inject Rating service
+
+    @Autowired
+    private RatingService ratingService;
 
     @RequestMapping("/rating/list")
     public String home(Model model)
