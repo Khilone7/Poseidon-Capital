@@ -24,8 +24,7 @@ public class BidListController {
     @RequestMapping("/bidList/list")
     public String home(Model model) {
         //  call service find all bids to show to the view
-        List<BidList> bidLists = bidListService.getAllBidLists();
-        model.addAttribute("bidLists", bidLists);
+        model.addAttribute("bidLists", bidListService.getAllBidLists());
         return "bidList/list";
     }
 
@@ -37,7 +36,9 @@ public class BidListController {
     @PostMapping("/bidList/validate")
     public String validate(@Valid BidList bid, BindingResult result, Model model) {
         //  check data valid and save to db, after saving return bid list
-        if (result.hasErrors()) return "bidList/add";
+        if (result.hasErrors()) {
+            return "bidList/add";
+        }
         try {
             bidListService.addBidList(bid.getAccount(), bid.getType(), bid.getBidQuantity());
         } catch (Exception e) {
