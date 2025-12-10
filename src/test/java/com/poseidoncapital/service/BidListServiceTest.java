@@ -1,8 +1,7 @@
-package com.poseidoncapital;
+package com.poseidoncapital.service;
 
 import com.poseidoncapital.domain.BidList;
 import com.poseidoncapital.repositories.BidListRepository;
-import com.poseidoncapital.service.BidListService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -52,8 +51,11 @@ class BidListServiceTest {
     void addBidList_shouldSetCorrectValues() {
         bidListService.addBidList("TestAccount", "TestType", 150.0);
 
-        verify(bidListRepository).save(argThat(bid -> "TestAccount".equals(bid.getAccount()) &&
-                        "TestType".equals(bid.getType()) && bid.getBidQuantity() == 150.0));
+        verify(bidListRepository).save(argThat(bid ->
+                "TestAccount".equals(bid.getAccount()) &&
+                "TestType".equals(bid.getType()) &&
+                bid.getBidQuantity() == 150.0
+        ));
     }
 
     @Test
@@ -86,8 +88,10 @@ class BidListServiceTest {
 
         bidListService.updateBidList(1, "NewAccount", "NewType", 200.0);
 
-        verify(bidListRepository).save(argThat(bid -> "NewAccount".equals(bid.getAccount()) &&
-                        "NewType".equals(bid.getType()) && bid.getBidQuantity() == 200.0));
+        verify(bidListRepository).save(argThat(bid ->
+                "NewAccount".equals(bid.getAccount()) &&
+                "NewType".equals(bid.getType()) &&
+                bid.getBidQuantity() == 200.0));
     }
 
     @Test
