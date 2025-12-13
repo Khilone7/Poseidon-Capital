@@ -1,10 +1,8 @@
 package com.poseidoncapital.controllers;
 
 import com.poseidoncapital.domain.Trade;
-import com.poseidoncapital.service.BidListService;
 import com.poseidoncapital.service.TradeService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -34,18 +32,13 @@ public class TradeController {
     }
 
     @PostMapping("/trade/validate")
-    public String validate(@Valid Trade trade, BindingResult result, Model model) {
+    public String validate(@Valid Trade trade, BindingResult result) {
         //  check data valid and save to db, after saving return Trade list
-        if (result.hasErrors()) {
-            return "trade/add";
-        }
-        try {
+        if (!result.hasErrors()) {
             tradeService.addTrade(trade.getAccount(), trade.getType(), trade.getBuyQuantity());
-        } catch (Exception e) {
-            result.rejectValue("account", "error.trade", "Erreur lors de l'ajout du Trade");
-            return "trade/add";
+            return "redirect:/trade/list";
         }
-        return "redirect:/trade/list";
+        return "trade/add";
     }
 
     @GetMapping("/trade/update/{id}")
@@ -60,20 +53,16 @@ public class TradeController {
     public String updateTrade(@PathVariable("id") Integer id, @Valid Trade trade,
                               BindingResult result, Model model) {
         //  check required fields, if valid call service to update Trade and return Trade list
-        if (result.hasErrors()) {
-            return "trade/update";
-        }
-        try {
+        if (!result.hasErrors()) {
             tradeService.updateTrade(id, trade.getAccount(), trade.getType(), trade.getBuyQuantity());
-        } catch (Exception e) {
-            result.rejectValue("account", "error.trade", "Erreur lors de la mise à jour du Trade");
-            return "trade/update";
+            return "redirect:/trade/list";
         }
-        return "redirect:/trade/list";
+        model.addAttribute("trade", trade);
+        return "trade/update";
     }
 
     @GetMapping("/trade/delete/{id}")
-    public String deleteTrade(@PathVariable("id") Integer id, Model model) {
+    public String deleteTrade(@PathVariable("id") Integer id) {
         //  Find Trade by Id and delete the Trade, return to Trade list
         tradeService.deleteTrade(id);
         return "redirect:/trade/list";

@@ -32,18 +32,13 @@ public class BidListController {
     }
 
     @PostMapping("/bidList/validate")
-    public String validate(@Valid BidList bid, BindingResult result, Model model) {
+    public String validate(@Valid BidList bid, BindingResult result) {
         //  check data valid and save to db, after saving return bid list
-        if (result.hasErrors()) {
-            return "bidList/add";
-        }
-        try {
+        if (!result.hasErrors()){
             bidListService.addBidList(bid.getAccount(), bid.getType(), bid.getBidQuantity());
-        } catch (Exception e) {
-            result.rejectValue("account", "error.bidList", "Erreur lors de l'ajout du Bid");
-            return "bidList/add";
+            return "redirect:/bidList/list";
         }
-        return "bidList/list";
+        return "bidList/add";
     }
 
     @GetMapping("/bidList/update/{id}")
@@ -58,20 +53,16 @@ public class BidListController {
     public String updateBid(@PathVariable("id") Integer id, @Valid BidList bidList,
                             BindingResult result, Model model) {
         //  check required fields, if valid call service to update Bid and return list Bid
-        if (result.hasErrors()){
-            return "bidList/update";
-        }
-        try {
+        if (!result.hasErrors()){
             bidListService.updateBidList(id,bidList.getAccount(),bidList.getType(), bidList.getBidQuantity());
-        }catch (IllegalArgumentException e) {
-            result.rejectValue("account", "error.bidList", "Erreur lors de la mise à jour du Bid");
-            return "bidList/update";
+            return "redirect:/bidList/list";
         }
-        return "redirect:/bidList/list";
+        model.addAttribute("bidList", bidList);
+        return "bidList/update";
     }
 
     @GetMapping("/bidList/delete/{id}")
-    public String deleteBid(@PathVariable("id") Integer id, Model model) {
+    public String deleteBid(@PathVariable("id") Integer id) {
         //  Find Bid by Id and delete the bid, return to Bid list
         bidListService.deleteBidList(id);
         return "redirect:/bidList/list";

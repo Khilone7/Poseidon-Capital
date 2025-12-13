@@ -1,10 +1,8 @@
 package com.poseidoncapital.controllers;
 
 import com.poseidoncapital.domain.RuleName;
-import com.poseidoncapital.service.BidListService;
 import com.poseidoncapital.service.RuleNameService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -34,19 +32,14 @@ public class RuleNameController {
     }
 
     @PostMapping("/ruleName/validate")
-    public String validate(@Valid RuleName ruleName, BindingResult result, Model model) {
+    public String validate(@Valid RuleName ruleName, BindingResult result) {
         //  check data valid and save to db, after saving return RuleName list
-        if (result.hasErrors()) {
-            return "ruleName/add";
-        }
-        try {
+        if (!result.hasErrors()) {
             ruleNameService.addRuleName(ruleName.getName(), ruleName.getDescription(), ruleName.getJson(),
                     ruleName.getTemplate(), ruleName.getSqlStr(), ruleName.getSqlPart());
-        } catch (Exception e) {
-            result.rejectValue("name", "error.ruleName", "Erreur lors de l'ajout du Rule Name");
-            return "ruleName/add";
+            return "redirect:/ruleName/list";
         }
-        return "redirect:/ruleName/list";
+        return "ruleName/add";
     }
 
     @GetMapping("/ruleName/update/{id}")
@@ -61,21 +54,17 @@ public class RuleNameController {
     public String updateRuleName(@PathVariable("id") Integer id, @Valid RuleName ruleName,
                                  BindingResult result, Model model) {
         //  check required fields, if valid call service to update RuleName and return RuleName list
-        if (result.hasErrors()) {
-            return "ruleName/update";
-        }
-        try {
+        if (!result.hasErrors()) {
             ruleNameService.updateRuleName(id, ruleName.getName(), ruleName.getDescription(), ruleName.getJson(),
                     ruleName.getTemplate(), ruleName.getSqlStr(), ruleName.getSqlPart());
-        } catch (Exception e) {
-            result.rejectValue("name", "error.ruleName", "Erreur lors de la mise à jour du Rule Name");
-            return "ruleName/update";
+            return "redirect:/ruleName/list";
         }
-        return "redirect:/ruleName/list";
+        model.addAttribute("ruleName", ruleName);
+        return "ruleName/update";
     }
 
     @GetMapping("/ruleName/delete/{id}")
-    public String deleteRuleName(@PathVariable("id") Integer id, Model model) {
+    public String deleteRuleName(@PathVariable("id") Integer id) {
         //  Find RuleName by Id and delete the RuleName, return to Rule list
         ruleNameService.deleteRuleName(id);
         return "redirect:/ruleName/list";

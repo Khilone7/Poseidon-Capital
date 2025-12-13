@@ -1,6 +1,8 @@
 package com.poseidoncapital.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.sql.Timestamp;
@@ -15,12 +17,15 @@ public class Trade {
     @Column(name = "trade_id")
     private Integer tradeId;
 
-    @Column(name = "account", nullable = false, length = 30)
+    @Size(max = 30, min = 3, message = "The field must be between 3 and 30 characters long.")
+    @Column(name = "account")
     private String account;
 
-    @Column(name = "type", nullable = false, length = 30)
+    @Size(max = 30, min = 3, message = "The field must be between 3 and 30 characters long.")
+    @Column(name = "type")
     private String type;
 
+    @Digits(integer = 308, fraction = 10, message = "Too many digits after the decimal point")
     @Column(name = "buy_quantity")
     private Double buyQuantity;
 

@@ -2,7 +2,7 @@ package com.poseidoncapital.controllers;
 
 import com.poseidoncapital.domain.Rating;
 import com.poseidoncapital.service.RatingService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import jakarta.validation.Valid;
 
+@RequiredArgsConstructor
 @Controller
 public class RatingController {
 
-    @Autowired
-    private RatingService ratingService;
+    private final RatingService ratingService;
 
     @RequestMapping("/rating/list")
     public String home(Model model) {
@@ -32,18 +32,13 @@ public class RatingController {
     }
 
     @PostMapping("/rating/validate")
-    public String validate(@Valid Rating rating, BindingResult result, Model model) {
+    public String validate(@Valid Rating rating, BindingResult result) {
         //  check data valid and save to db, after saving return Rating list
-        if (result.hasErrors()) {
-            return "rating/add";
-        }
-        try {
+        if (!result.hasErrors()) {
             ratingService.addRating(rating.getMoodysRating(), rating.getSandPRating(), rating.getFitchRating(), rating.getOrderNumber());
-        } catch (Exception e) {
-            result.rejectValue("moodysRating", "error.rating", "Erreur lors de l'ajout de la notation");
-            return "rating/add";
+            return "redirect:/rating/list";
         }
-        return "redirect:/rating/list";
+        return "rating/add";
     }
 
     @GetMapping("/rating/update/{id}")
@@ -58,20 +53,16 @@ public class RatingController {
     public String updateRating(@PathVariable("id") Integer id, @Valid Rating rating,
                                BindingResult result, Model model) {
         //  check required fields, if valid call service to update Rating and return Rating list
-        if (result.hasErrors()) {
-            return "rating/update";
-        }
-        try {
+        if (!result.hasErrors()) {
             ratingService.updateRating(id, rating.getMoodysRating(), rating.getSandPRating(), rating.getFitchRating(), rating.getOrderNumber());
-        } catch (IllegalArgumentException e) {
-            result.rejectValue("moodysRating", "error.rating", "Erreur lors de la mise à jour de la notation");
-            return "rating/update";
+            return "redirect:/rating/list";
         }
-        return "redirect:/rating/list";
+        model.addAttribute("rating", rating);
+        return "rating/update";
     }
 
     @GetMapping("/rating/delete/{id}")
-    public String deleteRating(@PathVariable("id") Integer id, Model model) {
+    public String deleteRating(@PathVariable("id") Integer id) {
         //  Find Rating by Id and delete the Rating, return to Rating list
         ratingService.deleteRating(id);
         return "redirect:/rating/list";

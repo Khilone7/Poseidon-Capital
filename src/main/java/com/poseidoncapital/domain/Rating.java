@@ -1,6 +1,9 @@
 package com.poseidoncapital.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -13,15 +16,20 @@ public class Rating {
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "moodys_rating", length = 125)
+    @Size(max = 125, message = "The field cannot exceed {max} characters.")
+    @Column(name = "moodys_rating")
     private String moodysRating;
 
-    @Column(name = "sandp_rating", length = 125)
+    @Size(max = 125, message = "The field cannot exceed {max} characters.")
+    @Column(name = "sandp_rating")
     private String sandPRating;
 
-    @Column(name = "fitch_rating", length = 125)
+    @Size(max = 125, message = "The field cannot exceed {max} characters.")
+    @Column(name = "fitch_rating")
     private String fitchRating;
 
+    @Max(value = 127, message = "The field cannot exceed 127.")
+    @Min(value = -127, message = "The field cannot be less than -127.")
     @Column(name = "order_number")
     private Integer orderNumber;
 }

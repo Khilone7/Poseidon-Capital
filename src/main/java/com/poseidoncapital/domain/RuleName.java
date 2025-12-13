@@ -1,6 +1,7 @@
 package com.poseidoncapital.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -13,21 +14,27 @@ public class RuleName {
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "name", length = 125)
+    @Size(max = 125, message = "The field cannot exceed {max} characters.")
+    @Column(name = "name")
     private String name;
 
-    @Column(name = "description", length = 125)
+    @Size(max = 125, message = "The field cannot exceed {max} characters.")
+    @Column(name = "description")
     private String description;
 
-    @Column(name = "json", length = 125)
+    @Size(max = 125, message = "The field cannot exceed {max} characters.")
+    @Column(name = "json")
     private String json;
 
-    @Column(name = "template", length = 512)
+    @Size(max = 512, message = "The field cannot exceed {max} characters.")
+    @Column(name = "template")
     private String template;
 
-    @Column(name = "sql_str", length = 125)
+    @Size(max = 125, message = "The field cannot exceed {max} characters.")
+    @Column(name = "sql_str")
     private String sqlStr;
 
-    @Column(name = "sql_part", length = 125)
+    @Size(max = 125, message = "The field cannot exceed {max} characters.")
+    @Column(name = "sql_part")
     private String sqlPart;
 }
