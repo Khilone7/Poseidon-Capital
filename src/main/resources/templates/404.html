@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <title>Resource Not Found</title>
+    <link rel="stylesheet" th:href="@{/bootstrap.min.css}">
+</head>
+<body>
+<div class="container mt-5">
+    <h3>Resource Not Found</h3>
+    <p class="error text-danger" th:text="${errorMsg}">Error</p>
+    <a href="/home" class="btn btn-primary">Back to Home</a>
+</div>
+</body>
+</html>

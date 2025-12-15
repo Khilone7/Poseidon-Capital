@@ -1,9 +1,7 @@
 package com.poseidoncapital.domain;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.sql.Timestamp;
@@ -18,6 +16,7 @@ public class CurvePoint {
     @Column(name = "id")
     private Integer id;
 
+    @NotNull(message = "must not be null")
     @Max(value = 127, message = "The field cannot exceed 127.")
     @Min(value = -127, message = "The field cannot be less than -127.")
     @Column(name = "curve_id")
