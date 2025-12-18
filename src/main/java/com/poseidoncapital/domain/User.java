@@ -7,7 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 @Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+    @Column(name = "Id")
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Integer id;
     @NotBlank(message = "Username is mandatory")
     private String username;
@@ -17,6 +18,9 @@ public class User {
     private String fullname;
     @NotBlank(message = "Role is mandatory")
     private String role;
+
+    @Column(name = "keycloak_id", unique = true)
+    private String keycloakId;
 
     public Integer getId() {
         return id;
@@ -56,5 +60,13 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getKeycloakId() {
+        return keycloakId;
+    }
+
+    public void setKeycloakId(String keycloakId) {
+        this.keycloakId = keycloakId;
     }
 }
