@@ -1,10 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org" lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="utf-8"/>
+    <title>Home</title>
+    <link rel="stylesheet" th:href="@{/bootstrap.min.css}" >
 </head>
-<body>
-$END$
+<body class="vh-100 d-flex align-items-center justify-content-center">
+<div class="container" style="max-width:420px; margin-top: -200px;">
+    <div class="row">
+        <div class="col-12">
+            <h4 class="fw-bold">Login with Username and Password</h4>
+        </div>
+    </div>
+    <form th:action="@{/login}" method="post">
+        <div class="d-flex align-items-center mb-1">
+            <label for="username" style="width: 80px;">User:</label>
+            <input type="text" id="username" name="username" class="form-control" style="width: 250px;"/>
+        </div>
+        <div class="d-flex align-items-center mb-1">
+            <label for="password" style="width: 80px;">Password:</label>
+            <input type="password" id="password" name="password" class="form-control" style="width: 250px;"/>
+        </div>
+        <div class="row">
+            <div class="col-4">
+                <button type="submit" class="btn btn-light border">Login</button>
+            </div>
+        </div>
+    </form>
+</div>
 </body>
 </html>
