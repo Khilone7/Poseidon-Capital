@@ -25,7 +25,8 @@
             <div class="form-group">
                 <label for="username" class="col-sm-2 control-label">User Name</label>
                 <div class="col-sm-10">
-                    <input type="text" th:field="*{username}" id="username" placeholder="User Name" class="col-4">
+                    <input type="text" th:field="*{username}" id="username"
+                           class="col-4" readonly style="background-color: #e9ecef; cursor: not-allowed;">
                     <p class="text-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></p>
                 </div>
             </div>

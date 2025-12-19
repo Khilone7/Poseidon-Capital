@@ -1,8 +1,10 @@
 package com.poseidoncapital.service;
 
+import jakarta.ws.rs.BadRequestException;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
@@ -63,8 +65,8 @@ public class KeycloakAdminService {
      * @return L'ID Keycloak du nouvel utilisateur
      */
     public String createUser(String username, String password, String role) {
-        //Obtenir une connexion admin
         Keycloak keycloak = getKeycloakInstance();
+        Response response = null;
 
         try {
             // Accéder au realm cible
@@ -78,9 +80,13 @@ public class KeycloakAdminService {
             user.setEmailVerified(true);
 
             // Créer l'utilisateur dans Keycloak
-            Response response = usersResource.create(user);
+            response = usersResource.create(user);
 
             // Vérifier que la création a réussi
+            if (response.getStatus() == 409) {
+                throw new IllegalArgumentException("Ce nom d'utilisateur est déjà utilisé");
+            }
+
             if (response.getStatus() != 201) {
                 throw new RuntimeException("Erreur création utilisateur: " + response.getStatusInfo());
             }
@@ -106,15 +112,17 @@ public class KeycloakAdminService {
             usersResource.get(userId).roles().realmLevel()
                     .add(Collections.singletonList(roleRepresentation));
 
-            // Nettoyer et retourner l'ID
-            response.close();
-            keycloak.close();
-
             return userId;
 
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
-            keycloak.close();
             throw new RuntimeException("Erreur lors de la création de l'utilisateur dans Keycloak", e);
+        }finally {
+            if (response != null) {
+                response.close();
+            }
+            keycloak.close();
         }
     }
 
@@ -126,9 +134,10 @@ public class KeycloakAdminService {
     public void deleteUserById(String keycloakUserId) {
         Keycloak keycloak = getKeycloakInstance();
         try {
-            RealmResource realmResource = keycloak.realm(targetRealm);
-            UsersResource usersResource = realmResource.users();
-            usersResource.delete(keycloakUserId);
+            keycloak.realm(targetRealm)
+                    .users()
+                    .get(keycloakUserId)
+                    .remove();
         } catch (Exception e) {
             throw new RuntimeException("Impossible de supprimer l'utilisateur de Keycloak", e);
         } finally {
@@ -146,22 +155,23 @@ public class KeycloakAdminService {
         Keycloak keycloak = getKeycloakInstance();
 
         try {
-            RealmResource realmResource = keycloak.realm(targetRealm);
-            UsersResource usersResource = realmResource.users();
+            UserResource userResource = keycloak.realm(targetRealm)
+                    .users()
+                    .get(keycloakUserId);
 
-            // Préparer le nouveau credential
             CredentialRepresentation credential = new CredentialRepresentation();
             credential.setType(CredentialRepresentation.PASSWORD);
             credential.setValue(newPassword);
             credential.setTemporary(false);
 
-            // Mettre à jour le password
-            usersResource.get(keycloakUserId).resetPassword(credential);
-        } catch (Exception e) {
+            userResource.resetPassword(credential);
+        }catch (BadRequestException e) {
+            throw new IllegalArgumentException("Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial");
+
+        }catch (Exception e) {
             throw new RuntimeException("Impossible de mettre à jour le password dans Keycloak", e);
-        } finally {
-            keycloak.close();
         }
+            keycloak.close();
     }
 
     /**
@@ -174,30 +184,25 @@ public class KeycloakAdminService {
         Keycloak keycloak = getKeycloakInstance();
 
         try {
-            RealmResource realmResource = keycloak.realm(targetRealm);
-            UsersResource usersResource = realmResource.users();
+            UserResource userResource = keycloak.realm(targetRealm)
+                    .users()
+                    .get(keycloakUserId);
 
-            // 1. Récupérer les rôles actuels
-            List<RoleRepresentation> currentRoles = usersResource.get(keycloakUserId)
+            List<RoleRepresentation> currentRoles = userResource
                     .roles()
                     .realmLevel()
                     .listAll();
 
-            // 2. Supprimer tous les rôles actuels (ADMIN et USER)
             if (!currentRoles.isEmpty()) {
-                usersResource.get(keycloakUserId)
-                        .roles()
-                        .realmLevel()
-                        .remove(currentRoles);
+                userResource.roles().realmLevel().remove(currentRoles);
             }
 
-            // 3. Ajouter le nouveau rôle
-            RoleRepresentation roleRepresentation = realmResource.roles()
+            RoleRepresentation roleRepresentation = keycloak.realm(targetRealm)
+                    .roles()
                     .get(newRole)
                     .toRepresentation();
 
-            usersResource.get(keycloakUserId)
-                    .roles()
+            userResource.roles()
                     .realmLevel()
                     .add(Collections.singletonList(roleRepresentation));
 

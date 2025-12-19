@@ -40,6 +40,9 @@ public class UserController {
             try {
                 userService.createUser(user);
                 return "redirect:/user/list";
+            } catch (IllegalArgumentException e) {
+                result.rejectValue("username", "error.username", e.getMessage());
+                return "user/add";
             } catch (Exception e) {
                 model.addAttribute("errorMessage", "Erreur lors de la création : " + e.getMessage());
                 return "user/add";
@@ -67,6 +70,10 @@ public class UserController {
             user.setId(id);
             userService.updateUser(user);
             return "redirect:/user/list";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("user", user);
+            result.rejectValue("password", "error.password", e.getMessage());
+            return "user/update";
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Erreur lors de la mise à jour : " + e.getMessage());
             model.addAttribute("user", user);

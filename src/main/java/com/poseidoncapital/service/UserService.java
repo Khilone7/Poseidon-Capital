@@ -45,6 +45,8 @@ public class UserService {
             user.setKeycloakId(keycloakId);
             user.setPassword("KEYCLOAK_AUTH");
             userRepository.save(user);
+        }catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             if (keycloakId != null) {
                 try {
@@ -68,15 +70,17 @@ public class UserService {
         User user = userRepository.findById(userForm.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé : " + userForm.getId()));
         try {
-            if (user.getPassword() != null && !user.getPassword().isEmpty() && !user.getPassword().equals("KEYCLOAK_AUTH")) {
-                keycloakAdminService.updateUserPassword(user.getKeycloakId(), user.getPassword());
+            if (userForm.getPassword() != null && !userForm.getPassword().isEmpty() && !userForm.getPassword().equals("KEYCLOAK_AUTH")) {
+                keycloakAdminService.updateUserPassword(user.getKeycloakId(), userForm.getPassword());
                 user.setPassword("KEYCLOAK_AUTH");
             }
-            keycloakAdminService.updateUserRole(user.getKeycloakId(), user.getRole());
+            keycloakAdminService.updateUserRole(user.getKeycloakId(), userForm.getRole());
             user.setFullname(userForm.getFullname());
             user.setRole(userForm.getRole());
             userRepository.save(user);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            throw e;
+        }catch (Exception e) {
             throw new RuntimeException("Impossible de mettre à jour l'utilisateur : " + e.getMessage(), e);
         }
     }
@@ -95,8 +99,8 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé : " + id));
         try {
-            userRepository.delete(user);
             keycloakAdminService.deleteUserById(user.getKeycloakId());
+            userRepository.delete(user);
         } catch (Exception e) {
             throw new RuntimeException("Impossible de supprimer l'utilisateur", e);
         }
