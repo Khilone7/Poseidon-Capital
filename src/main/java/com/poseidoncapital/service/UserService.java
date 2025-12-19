@@ -2,7 +2,7 @@ package com.poseidoncapital.service;
 
 import com.poseidoncapital.domain.User;
 import com.poseidoncapital.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,14 +14,12 @@ import org.springframework.transaction.annotation.Transactional;
  * - Synchroniser avec Keycloak
  * - Gérer les erreurs métier
  */
+@RequiredArgsConstructor
 @Service
 public class UserService {
 
-    @Autowired
-    private KeycloakAdminService keycloakAdminService;
-
-    @Autowired
-    private UserRepository userRepository;
+    private final KeycloakAdminService keycloakAdminService;
+    private final UserRepository userRepository;
 
     /**
      * Créer un nouvel utilisateur dans Keycloak ET dans la BDD
@@ -32,37 +30,29 @@ public class UserService {
      * 3. Sauvegarder en BDD avec le keycloakId
      *
      * @param user L'utilisateur à créer (sans keycloakId)
-     * @return L'utilisateur sauvegardé (avec keycloakId et id BDD)
+     * L'utilisateur sauvegardé (avec keycloakId et id BDD)
      * @throws RuntimeException Si la création échoue
      */
     @Transactional
-    public User createUser(User user) {
+    public void createUser(User user) {
+        String keycloakId = null;
         try {
-            // Créer dans Keycloak
-            String keycloakId = keycloakAdminService.createUser(
+            keycloakId = keycloakAdminService.createUser(
                     user.getUsername(),
-                    user.getPassword(),  // Password en clair, Keycloak va le hasher
+                    user.getPassword(),
                     user.getRole()
             );
-
-            // Préparer l'entité pour la BDD
             user.setKeycloakId(keycloakId);
-
-            // ⚠️ Le password n'est plus nécessaire en BDD (Keycloak gère l'auth)
-            // Mais on garde le champ pour compatibilité
             user.setPassword("KEYCLOAK_AUTH");
-
-            // Sauvegarder en BDD
-            User savedUser = userRepository.save(user);
-
-            return savedUser;
-
+            userRepository.save(user);
         } catch (Exception e) {
-            System.err.println("❌ Erreur lors de la création de l'utilisateur : " + e.getMessage());
-
-            // TODO Phase 3 : Rollback Keycloak si BDD échoue
-            // Pour l'instant, on laisse comme ça
-
+            if (keycloakId != null) {
+                try {
+                    keycloakAdminService.deleteUserById(keycloakId);
+                } catch (Exception rollbackException) {
+                    rollbackException.printStackTrace();
+                }
+            }
             throw new RuntimeException("Impossible de créer l'utilisateur : " + e.getMessage(), e);
         }
     }
@@ -72,7 +62,6 @@ public class UserService {
      * Synchronise avec Keycloak (password et rôle)
      *
      * @param userForm L'utilisateur avec les nouvelles données
-     * @return L'utilisateur mis à jour
      */
     @Transactional
     public void updateUser(User userForm) {
@@ -84,6 +73,9 @@ public class UserService {
                 user.setPassword("KEYCLOAK_AUTH");
             }
             keycloakAdminService.updateUserRole(user.getKeycloakId(), user.getRole());
+            user.setFullname(userForm.getFullname());
+            user.setRole(userForm.getRole());
+            userRepository.save(user);
         } catch (Exception e) {
             throw new RuntimeException("Impossible de mettre à jour l'utilisateur : " + e.getMessage(), e);
         }
@@ -102,20 +94,10 @@ public class UserService {
     public void deleteUser(Integer id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé : " + id));
-
         try {
-            // Supprimer de la BDD
             userRepository.delete(user);
-            System.out.println("✅ Utilisateur supprimé de la BDD : " + user.getUsername());
-
-            // Supprimer de Keycloak (si l'utilisateur a un keycloakId)
-            if (user.getKeycloakId() != null && !user.getKeycloakId().isEmpty()) {
-                keycloakAdminService.deleteUserById(user.getKeycloakId());
-                System.out.println("✅ Utilisateur supprimé de Keycloak : " + user.getKeycloakId());
-            }
-
+            keycloakAdminService.deleteUserById(user.getKeycloakId());
         } catch (Exception e) {
-            System.err.println("❌ Erreur lors de la suppression : " + e.getMessage());
             throw new RuntimeException("Impossible de supprimer l'utilisateur", e);
         }
     }

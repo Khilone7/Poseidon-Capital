@@ -46,16 +46,16 @@ public class KeycloakAdminService {
      */
     private Keycloak getKeycloakInstance() {
         return KeycloakBuilder.builder()
-                .serverUrl(serverUrl)           // http://localhost:8180
-                .realm(adminRealm)              // "master"
-                .username(adminUsername)        // "admin"
-                .password(adminPassword)        // "admin"
-                .clientId(adminClientId)        // "admin-cli"
+                .serverUrl(serverUrl)
+                .realm(adminRealm)
+                .username(adminUsername)
+                .password(adminPassword)
+                .clientId(adminClientId)
                 .build();
     }
 
     /**
-     * 🆕 Créer un utilisateur dans Keycloak
+     * Créer un utilisateur dans Keycloak
      *
      * @param username Le nom d'utilisateur
      * @param password Le mot de passe (en clair, Keycloak va le hasher)
@@ -75,7 +75,7 @@ public class KeycloakAdminService {
             UserRepresentation user = new UserRepresentation();
             user.setUsername(username);
             user.setEnabled(true);          // Utilisateur actif dès la création
-            user.setEmailVerified(true);    // Email considéré comme vérifié
+            user.setEmailVerified(true);
 
             // Créer l'utilisateur dans Keycloak
             Response response = usersResource.create(user);
