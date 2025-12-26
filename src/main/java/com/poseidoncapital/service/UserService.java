@@ -7,12 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Service de gestion des utilisateurs
- *
- * Responsabilités :
- * - Créer/modifier/supprimer des utilisateurs
- * - Synchroniser avec Keycloak
- * - Gérer les erreurs métier
+ * User management service
+ * Handles user lifecycle operations and Keycloak synchronization
  */
 @RequiredArgsConstructor
 @Service
@@ -22,16 +18,12 @@ public class UserService {
     private final UserRepository userRepository;
 
     /**
-     * Créer un nouvel utilisateur dans Keycloak ET dans la BDD
+     * Creates a new user in both Keycloak and the database
+     * The operation is atomic: if database save fails, Keycloak user is rolled back
      *
-     * Workflow :
-     * 1. Valider les données (déjà fait par @Valid dans le controller)
-     * 2. Créer dans Keycloak (génère le keycloakId)
-     * 3. Sauvegarder en BDD avec le keycloakId
-     *
-     * @param user L'utilisateur à créer (sans keycloakId)
-     * L'utilisateur sauvegardé (avec keycloakId et id BDD)
-     * @throws RuntimeException Si la création échoue
+     * @param user User to create (keycloakId will be generated)
+     * @throws IllegalArgumentException if username already exists
+     * @throws RuntimeException if creation fails
      */
     @Transactional
     public void createUser(User user) {
@@ -45,64 +37,66 @@ public class UserService {
             user.setKeycloakId(keycloakId);
             user.setPassword("KEYCLOAK_AUTH");
             userRepository.save(user);
-        }catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
             if (keycloakId != null) {
-                try {
-                    keycloakAdminService.deleteUserById(keycloakId);
-                } catch (Exception rollbackException) {
-                    rollbackException.printStackTrace();
-                }
+                rollbackKeycloakUser(keycloakId);
             }
-            throw new RuntimeException("Impossible de créer l'utilisateur : " + e.getMessage(), e);
+            throw new RuntimeException("Unable to create user : " + e.getMessage(), e);
+        }
+    }
+
+    private void rollbackKeycloakUser(String keycloakId) {
+        try {
+            keycloakAdminService.deleteUserById(keycloakId);
+        } catch (Exception rollbackException) {
+            System.err.println("Failed to rollback Keycloak user: " + keycloakId);
         }
     }
 
     /**
-     * Mettre à jour un utilisateur existant
-     * Synchronise avec Keycloak (password et rôle)
+     * Updates an existing user's password, role, and profile information
+     * Changes are synchronized to Keycloak
      *
-     * @param userForm L'utilisateur avec les nouvelles données
+     * @param userForm User object containing updated values
+     * @throws IllegalArgumentException if user not found or password invalid
+     * @throws RuntimeException if update fails
      */
     @Transactional
     public void updateUser(User userForm) {
         User user = userRepository.findById(userForm.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé : " + userForm.getId()));
+                .orElseThrow(() -> new IllegalArgumentException("User not found : " + userForm.getId()));
         try {
-            if (userForm.getPassword() != null && !userForm.getPassword().isEmpty() && !userForm.getPassword().equals("KEYCLOAK_AUTH")) {
-                keycloakAdminService.updateUserPassword(user.getKeycloakId(), userForm.getPassword());
-                user.setPassword("KEYCLOAK_AUTH");
-            }
+            keycloakAdminService.updateUserPassword(user.getKeycloakId(), userForm.getPassword());
             keycloakAdminService.updateUserRole(user.getKeycloakId(), userForm.getRole());
             user.setFullname(userForm.getFullname());
             user.setRole(userForm.getRole());
             userRepository.save(user);
         } catch (IllegalArgumentException e) {
             throw e;
-        }catch (Exception e) {
-            throw new RuntimeException("Impossible de mettre à jour l'utilisateur : " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to update user : " + e.getMessage(), e);
         }
     }
 
     /**
-     * Supprimer un utilisateur
+     * Deletes a user from both database and Keycloak
+     * Database deletion occurs first; if Keycloak deletion fails, transaction is rolled back
      *
-     * Workflow :
-     * 1. Supprimer de la BDD
-     * 2. Supprimer de Keycloak
-     *
-     * @param id L'ID de l'utilisateur dans la BDD
+     * @param id Database ID of the user to delete
+     * @throws IllegalArgumentException if user not found
+     * @throws RuntimeException if deletion fails
      */
     @Transactional
     public void deleteUser(Integer id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur non trouvé : " + id));
+                .orElseThrow(() -> new IllegalArgumentException("User not found : " + id));
         try {
-            keycloakAdminService.deleteUserById(user.getKeycloakId());
             userRepository.delete(user);
+            keycloakAdminService.deleteUserById(user.getKeycloakId());
         } catch (Exception e) {
-            throw new RuntimeException("Impossible de supprimer l'utilisateur", e);
+            throw new RuntimeException("Unable to delete user", e);
         }
     }
 }

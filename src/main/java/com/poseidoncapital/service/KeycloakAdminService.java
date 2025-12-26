@@ -1,6 +1,8 @@
 package com.poseidoncapital.service;
 
+import com.poseidoncapital.configuration.KeycloakPropertiesConfig;
 import jakarta.ws.rs.BadRequestException;
+import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -9,152 +11,117 @@ import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.ws.rs.core.Response;
+
 import java.util.Collections;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class KeycloakAdminService {
 
-    // 📌 Injection des propriétés depuis application.properties
-    @Value("${keycloak.admin.server-url}")
-    private String serverUrl;
+    private final KeycloakPropertiesConfig keycloakProperties;
 
-    @Value("${keycloak.admin.realm}")
-    private String adminRealm;
-
-    @Value("${keycloak.admin.username}")
-    private String adminUsername;
-
-    @Value("${keycloak.admin.password}")
-    private String adminPassword;
-
-    @Value("${keycloak.admin.client-id}")
-    private String adminClientId;
-
-    @Value("${keycloak.admin.target-realm}")
-    private String targetRealm;
+    private final String targetRealm = keycloakProperties.getTargetRealm();
 
     /**
-     * 🔑 Méthode privée pour obtenir une connexion admin à Keycloak
-     *
-     * Cette méthode :
-     * 1. Se connecte au realm "master" avec le compte admin
-     * 2. Obtient un token d'administration
-     * 3. Retourne un objet Keycloak qu'on peut utiliser pour faire des actions admin
+     * Private method to obtain an admin connection to Keycloak
+     * <p>
+     * This method:
+     * 1. Connects to the "master" realm with the admin account
+     * 2. Obtains an administration token
+     * 3. Returns a Keycloak object that can be used to perform admin actions
      */
     private Keycloak getKeycloakInstance() {
         return KeycloakBuilder.builder()
-                .serverUrl(serverUrl)
-                .realm(adminRealm)
-                .username(adminUsername)
-                .password(adminPassword)
-                .clientId(adminClientId)
+                .serverUrl(keycloakProperties.getServerUrl())
+                .realm(keycloakProperties.getRealm())
+                .username(keycloakProperties.getUsername())
+                .password(keycloakProperties.getPassword())
+                .clientId(keycloakProperties.getClientId())
                 .build();
     }
 
     /**
-     * Créer un utilisateur dans Keycloak
+     * Create a user in Keycloak
      *
-     * @param username Le nom d'utilisateur
-     * @param password Le mot de passe (en clair, Keycloak va le hasher)
-     * @param role Le rôle à assigner (ex: "ADMIN" ou "USER")
-     * @return L'ID Keycloak du nouvel utilisateur
+     * @param username The username
+     * @param password The password (plain text, Keycloak will hash it)
+     * @param role     The role to assign (e.g., "ADMIN" or "USER")
+     * @return The Keycloak ID of the new user
      */
     public String createUser(String username, String password, String role) {
-        Keycloak keycloak = getKeycloakInstance();
-        Response response = null;
-
-        try {
-            // Accéder au realm cible
+        try (Keycloak keycloak = getKeycloakInstance()) {
             RealmResource realmResource = keycloak.realm(targetRealm);
             UsersResource usersResource = realmResource.users();
 
-            // Préparer l'objet utilisateur
             UserRepresentation user = new UserRepresentation();
             user.setUsername(username);
-            user.setEnabled(true);          // Utilisateur actif dès la création
+            user.setEnabled(true);// User active from creation
             user.setEmailVerified(true);
 
-            // Créer l'utilisateur dans Keycloak
-            response = usersResource.create(user);
+            String userId;
+            try (Response response = usersResource.create(user)) {
+                if (response.getStatusInfo().toEnum() == Response.Status.CONFLICT) {
+                    throw new IllegalArgumentException("Ce nom d'utilisateur est déjà utilisé");
+                }
+                if (response.getStatusInfo().toEnum() != Response.Status.CREATED) {
+                    throw new RuntimeException("Erreur création utilisateur: " + response.getStatusInfo());
+                }
 
-            // Vérifier que la création a réussi
-            if (response.getStatus() == 409) {
-                throw new IllegalArgumentException("Ce nom d'utilisateur est déjà utilisé");
+                // Retrieve the new user's ID
+                String locationPath = response.getLocation().getPath();
+                userId = locationPath.substring(locationPath.lastIndexOf('/') + 1);
             }
 
-            if (response.getStatus() != 201) {
-                throw new RuntimeException("Erreur création utilisateur: " + response.getStatusInfo());
-            }
-
-            // Récupérer l'ID du nouvel utilisateur
-            // L'API retourne l'URL : /admin/realms/poseidonCapital-realm/users/a3b2c1...
-            // On extrait juste l'ID à la fin
-            String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
-
-            // Définir le mot de passe
+            // Set password
             CredentialRepresentation credential = new CredentialRepresentation();
             credential.setType(CredentialRepresentation.PASSWORD);
             credential.setValue(password);
-            credential.setTemporary(false);  // false = pas besoin de changer au premier login
-
+            credential.setTemporary(false);
             usersResource.get(userId).resetPassword(credential);
 
-            // Assigner le rôle
             RoleRepresentation roleRepresentation = realmResource.roles()
-                    .get(role)  // Récupère le rôle "ADMIN" ou "USER"
+                    .get(role)
                     .toRepresentation();
 
             usersResource.get(userId).roles().realmLevel()
                     .add(Collections.singletonList(roleRepresentation));
 
             return userId;
-
         } catch (IllegalArgumentException e) {
             throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de la création de l'utilisateur dans Keycloak", e);
-        }finally {
-            if (response != null) {
-                response.close();
-            }
-            keycloak.close();
+            throw new RuntimeException("Error creating user in Keycloak", e);
         }
     }
 
     /**
-     * Supprimer un utilisateur de Keycloak par son ID
+     * Delete a user from Keycloak by their ID
      *
-     * @param keycloakUserId L'UUID de l'utilisateur dans Keycloak
+     * @param keycloakUserId The user's UUID in Keycloak
      */
     public void deleteUserById(String keycloakUserId) {
-        Keycloak keycloak = getKeycloakInstance();
-        try {
+        try (Keycloak keycloak = getKeycloakInstance()) {
             keycloak.realm(targetRealm)
                     .users()
                     .get(keycloakUserId)
                     .remove();
         } catch (Exception e) {
-            throw new RuntimeException("Impossible de supprimer l'utilisateur de Keycloak", e);
-        } finally {
-            keycloak.close();
+            throw new RuntimeException("Unable to delete user from Keycloak", e);
         }
     }
 
     /**
-     * Mettre à jour le mot de passe d'un utilisateur dans Keycloak
+     * Update a user's password in Keycloak
      *
-     * @param keycloakUserId L'UUID de l'utilisateur dans Keycloak
-     * @param newPassword Le nouveau mot de passe (en clair)
+     * @param keycloakUserId The user's UUID in Keycloak
+     * @param newPassword    The new password (plain text)
      */
     public void updateUserPassword(String keycloakUserId, String newPassword) {
-        Keycloak keycloak = getKeycloakInstance();
-
-        try {
+        try (Keycloak keycloak = getKeycloakInstance()) {
             UserResource userResource = keycloak.realm(targetRealm)
                     .users()
                     .get(keycloakUserId);
@@ -165,25 +132,22 @@ public class KeycloakAdminService {
             credential.setTemporary(false);
 
             userResource.resetPassword(credential);
-        }catch (BadRequestException e) {
-            throw new IllegalArgumentException("Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial");
+        } catch (BadRequestException e) {
+            throw new IllegalArgumentException("Password must contain at least 8 characters, one uppercase letter, one digit and one special character");
 
-        }catch (Exception e) {
-            throw new RuntimeException("Impossible de mettre à jour le password dans Keycloak", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to update password in Keycloak", e);
         }
-            keycloak.close();
     }
 
     /**
-     * Mettre à jour le rôle d'un utilisateur dans Keycloak
+     * Update a user's role in Keycloak
      *
-     * @param keycloakUserId L'UUID de l'utilisateur dans Keycloak
-     * @param newRole Le nouveau rôle ("ADMIN" ou "USER")
+     * @param keycloakUserId The user's UUID in Keycloak
+     * @param newRole        The new role ("ADMIN" or "USER")
      */
     public void updateUserRole(String keycloakUserId, String newRole) {
-        Keycloak keycloak = getKeycloakInstance();
-
-        try {
+        try (Keycloak keycloak = getKeycloakInstance()) {
             UserResource userResource = keycloak.realm(targetRealm)
                     .users()
                     .get(keycloakUserId);
@@ -207,9 +171,7 @@ public class KeycloakAdminService {
                     .add(Collections.singletonList(roleRepresentation));
 
         } catch (Exception e) {
-            throw new RuntimeException("Impossible de mettre à jour le rôle dans Keycloak", e);
-        } finally {
-            keycloak.close();
+            throw new RuntimeException("Unable to update role in Keycloak", e);
         }
     }
 }
