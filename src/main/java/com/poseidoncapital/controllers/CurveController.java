@@ -4,6 +4,8 @@ import com.poseidoncapital.domain.CurvePoint;
 import com.poseidoncapital.service.CurveService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -21,9 +23,10 @@ public class CurveController {
     private final CurveService curveService;
 
     @RequestMapping("/curvePoint/list")
-    public String home(Model model, Authentication auth) {
+    public String home(Model model, @AuthenticationPrincipal OidcUser oidcUser) {
         //  find all Curve Point, add to model
         model.addAttribute("curvePoints", curveService.getAllCurvePoints());
+        model.addAttribute("username", oidcUser.getPreferredUsername());
         return "curvePoint/list";
     }
 

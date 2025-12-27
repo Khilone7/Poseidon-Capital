@@ -3,6 +3,8 @@ package com.poseidoncapital.controllers;
 import com.poseidoncapital.domain.BidList;
 import com.poseidoncapital.service.BidListService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,9 +22,10 @@ public class BidListController {
     private final BidListService bidListService;
 
     @RequestMapping("/bidList/list")
-    public String home(Model model) {
+    public String home(Model model, @AuthenticationPrincipal OidcUser oidcUser) {
         //  call service find all bids to show to the view
         model.addAttribute("bidLists", bidListService.getAllBidLists());
+        model.addAttribute("username", oidcUser.getPreferredUsername());
         return "bidList/list";
     }
 

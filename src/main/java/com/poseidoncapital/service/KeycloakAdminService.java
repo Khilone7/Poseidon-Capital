@@ -24,7 +24,9 @@ public class KeycloakAdminService {
 
     private final KeycloakPropertiesConfig keycloakProperties;
 
-    private final String targetRealm = keycloakProperties.getTargetRealm();
+    private String targetRealm() {
+        return keycloakProperties.getTargetRealm();
+    }
 
     /**
      * Private method to obtain an admin connection to Keycloak
@@ -54,7 +56,7 @@ public class KeycloakAdminService {
      */
     public String createUser(String username, String password, String role) {
         try (Keycloak keycloak = getKeycloakInstance()) {
-            RealmResource realmResource = keycloak.realm(targetRealm);
+            RealmResource realmResource = keycloak.realm(targetRealm());
             UsersResource usersResource = realmResource.users();
 
             UserRepresentation user = new UserRepresentation();
@@ -105,7 +107,7 @@ public class KeycloakAdminService {
      */
     public void deleteUserById(String keycloakUserId) {
         try (Keycloak keycloak = getKeycloakInstance()) {
-            keycloak.realm(targetRealm)
+            keycloak.realm(targetRealm())
                     .users()
                     .get(keycloakUserId)
                     .remove();
@@ -122,7 +124,7 @@ public class KeycloakAdminService {
      */
     public void updateUserPassword(String keycloakUserId, String newPassword) {
         try (Keycloak keycloak = getKeycloakInstance()) {
-            UserResource userResource = keycloak.realm(targetRealm)
+            UserResource userResource = keycloak.realm(targetRealm())
                     .users()
                     .get(keycloakUserId);
 
@@ -148,7 +150,7 @@ public class KeycloakAdminService {
      */
     public void updateUserRole(String keycloakUserId, String newRole) {
         try (Keycloak keycloak = getKeycloakInstance()) {
-            UserResource userResource = keycloak.realm(targetRealm)
+            UserResource userResource = keycloak.realm(targetRealm())
                     .users()
                     .get(keycloakUserId);
 
@@ -161,7 +163,7 @@ public class KeycloakAdminService {
                 userResource.roles().realmLevel().remove(currentRoles);
             }
 
-            RoleRepresentation roleRepresentation = keycloak.realm(targetRealm)
+            RoleRepresentation roleRepresentation = keycloak.realm(targetRealm())
                     .roles()
                     .get(newRole)
                     .toRepresentation();

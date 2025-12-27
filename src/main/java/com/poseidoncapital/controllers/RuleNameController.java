@@ -3,6 +3,8 @@ package com.poseidoncapital.controllers;
 import com.poseidoncapital.domain.RuleName;
 import com.poseidoncapital.service.RuleNameService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,9 +22,10 @@ public class RuleNameController {
     private final RuleNameService ruleNameService;
 
     @RequestMapping("/ruleName/list")
-    public String home(Model model) {
+    public String home(Model model, @AuthenticationPrincipal OidcUser oidcUser) {
         //  find all RuleName, add to model
         model.addAttribute("ruleNames", ruleNameService.getAllRuleNames());
+        model.addAttribute("username", oidcUser.getPreferredUsername());
         return "ruleName/list";
     }
 

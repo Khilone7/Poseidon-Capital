@@ -3,6 +3,8 @@ package com.poseidoncapital.controllers;
 import com.poseidoncapital.domain.Rating;
 import com.poseidoncapital.service.RatingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,9 +22,10 @@ public class RatingController {
     private final RatingService ratingService;
 
     @RequestMapping("/rating/list")
-    public String home(Model model) {
+    public String home(Model model, @AuthenticationPrincipal OidcUser oidcUser) {
         //  find all Rating, add to model
         model.addAttribute("ratings", ratingService.getAllRatings());
+        model.addAttribute("username", oidcUser.getPreferredUsername());
         return "rating/list";
     }
 

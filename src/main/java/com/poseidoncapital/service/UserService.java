@@ -35,7 +35,6 @@ public class UserService {
                     user.getRole()
             );
             user.setKeycloakId(keycloakId);
-            user.setPassword("KEYCLOAK_AUTH");
             userRepository.save(user);
         } catch (IllegalArgumentException e) {
             throw e;
