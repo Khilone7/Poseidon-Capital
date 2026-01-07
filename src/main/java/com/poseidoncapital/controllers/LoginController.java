@@ -2,7 +2,10 @@ package com.poseidoncapital.controllers;
 
 import com.poseidoncapital.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -30,7 +33,8 @@ public class LoginController {
     }
 
     @GetMapping("error")
-    public ModelAndView error() {
+    public ModelAndView error(Model model, @AuthenticationPrincipal OidcUser oidcUser) {
+        model.addAttribute("username", oidcUser.getPreferredUsername());
         ModelAndView mav = new ModelAndView();
         String errorMessage= "You are not authorized for the requested data.";
         mav.addObject("errorMsg", errorMessage);

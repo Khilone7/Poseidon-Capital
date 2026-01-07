@@ -41,6 +41,9 @@ public class SecurityConfig {
                         )
                         .defaultSuccessUrl("/bidList/list", true)
                 )
+                .exceptionHandling(exception -> exception
+                        .accessDeniedPage("/app/error")
+                )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessHandler(oidcLogoutSuccessHandler())
